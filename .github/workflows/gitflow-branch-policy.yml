@@ -1,0 +1,23 @@
+name: Enforce gitflow
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  statuses: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  branch-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce branch flow
+        uses: ncalteen/branch-enforcement@v2
+        with:
+          policy: |
+            develop:release/*
+            feature/*:develop
+          head_ref: ${{ github.head_ref }}
+          base_ref: ${{ github.base_ref }}
