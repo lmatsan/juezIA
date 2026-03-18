@@ -1,25 +1,112 @@
-name: Enforce gitflow
+name: Enforce branch origin policy
 
 on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
   pull_request:
     types: [opened, reopened, synchronize, edited]
+    branches:
+      - develop
+      - main
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  branch-policy:
+  validate-branch-origin:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Enforce branch flow
-        uses: ncalteen/branch-enforcement@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          policy: |
-            feature/*:develop
-            release/*:main
-            hotfix/*:main
-            hotfix/*:develop
-          head_ref: ${{ github.head_ref }}
-          base_ref: ${{ github.base_ref }}
+          fetch-depth: 0
+
+      - name: Determine branch and expected base
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH="${{ github.head_ref }}"
+            PR_BASE="${{ github.base_ref }}"
+          else
+            BRANCH="${GITHUB_REF_NAME}"
+            PR_BASE=""
+          fi
+
+          if [[ "$BRANCH" == feature/* ]]; then
+            EXPECTED_BASE="develop"
+          elif [[ "$BRANCH" == release/* ]]; then
+            EXPECTED_BASE="develop"
+          elif [[ "$BRANCH" == hotfix/* ]]; then
+            EXPECTED_BASE="main"
+          else
+            echo "ERROR: rama no soportada por esta política: $BRANCH"
+            exit 1
+          fi
+
+          echo "branch_name=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "pr_base=$PR_BASE" >> "$GITHUB_OUTPUT"
+          echo "expected_base=$EXPECTED_BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Validate PR target branch
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          BRANCH="${{ steps.vars.outputs.branch_name }}"
+          PR_BASE="${{ steps.vars.outputs.pr_base }}"
+          EXPECTED_BASE="${{ steps.vars.outputs.expected_base }}"
+
+          echo "Branch:        $BRANCH"
+          echo "PR target:     $PR_BASE"
+          echo "Expected base: $EXPECTED_BASE"
+
+          if [[ "$PR_BASE" != "$EXPECTED_BASE" ]]; then
+            echo "ERROR: la rama $BRANCH solo puede abrir PR contra $EXPECTED_BASE."
+            exit 1
+          fi
+
+      - name: Fetch expected base branch
+        shell: bash
+        run: |
+          BASE="${{ steps.vars.outputs.expected_base }}"
+          git fetch origin "$BASE" --no-tags
+
+      - name: Validate branch is based on latest expected base
+        shell: bash
+        run: |
+          BRANCH="${{ steps.vars.outputs.branch_name }}"
+          BASE="${{ steps.vars.outputs.expected_base }}"
+
+          BASE_SHA="$(git rev-parse "origin/$BASE")"
+          echo "origin/$BASE = $BASE_SHA"
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin "$BRANCH" --no-tags
+            BRANCH_SHA="$(git rev-parse "origin/$BRANCH")"
+          else
+            BRANCH_SHA="$(git rev-parse HEAD)"
+          fi
+
+          echo "$BRANCH = $BRANCH_SHA"
+
+          MERGE_BASE="$(git merge-base "$BRANCH_SHA" "origin/$BASE")"
+          echo "merge-base = $MERGE_BASE"
+
+          if [[ "$MERGE_BASE" != "$BASE_SHA" ]]; then
+            echo "ERROR: la rama $BRANCH no parte del último origin/$BASE."
+            echo
+            echo "Debes crearla desde $BASE actualizado:"
+            echo "  git fetch origin"
+            echo "  git switch $BASE"
+            echo "  git pull --ff-only origin $BASE"
+            echo "  git switch -c $BRANCH"
+            exit 1
+          fi
+
+      - name: Success
+        run: echo "Branch policy OK"
