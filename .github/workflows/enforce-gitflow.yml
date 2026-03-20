@@ -82,29 +82,29 @@ jobs:
           BRANCH="${{ steps.vars.outputs.branch_name }}"
           BASE="${{ steps.vars.outputs.expected_base }}"
 
-          BASE_SHA="$(git rev-parse "origin/$BASE")"
-          echo "origin/$BASE = $BASE_SHA"
+          # Traemos la rama base para comparar
+          git fetch origin "$BASE" --no-tags
 
+          # Identificamos el SHA de la rama que estamos probando
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            git fetch origin "$BRANCH" --no-tags
-            BRANCH_SHA="$(git rev-parse "origin/$BRANCH")"
+            # En un PR, queremos validar el origen de la rama que viene (HEAD del PR)
+            BRANCH_SHA="${{ github.event.pull_request.head.sha }}"
           else
             BRANCH_SHA="$(git rev-parse HEAD)"
           fi
 
-          echo "$BRANCH = $BRANCH_SHA"
-
-          MERGE_BASE="$(git merge-base "$BRANCH_SHA" "origin/$BASE")"
-          echo "merge-base = $MERGE_BASE"
-
-          if [[ "$MERGE_BASE" != "$BASE_SHA" ]]; then
-            echo "ERROR: la rama $BRANCH no parte del último origin/$BASE."
-            echo
-            echo "Debes crearla desde $BASE actualizado:"
+          echo "Validando si $BRANCH nace de el último origin/$BASE ($BASE_SHA)"
+          
+          # Comprobar si la base es ancestro de nuestra rama
+          if ! git merge-base --is-ancestor "origin/$BASE" "$BRANCH_SHA"; then
+            echo "-------------------------------------------------------"
+            echo "ERROR: La rama $BRANCH está desactualizada o nació mal."
+            echo "No contiene todos los commits de origin/$BASE."
+            echo "-------------------------------------------------------"
+            echo "Para arreglarlo, ejecuta en tu local:"
             echo "  git fetch origin"
-            echo "  git switch $BASE"
-            echo "  git pull --ff-only origin $BASE"
-            echo "  git switch -c $BRANCH"
+            echo "  git rebase origin/$BASE"
+            echo "  git push --force-with-lease"
             exit 1
           fi
 
