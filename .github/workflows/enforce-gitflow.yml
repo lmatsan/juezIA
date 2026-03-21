@@ -79,32 +79,32 @@ jobs:
       - name: Validate branch is based on latest expected base
         shell: bash
         run: |
-          BRANCH="${{ steps.vars.outputs.branch_name }}"
-          BASE="${{ steps.vars.outputs.expected_base }}"
+          # 1. Obtenemos el SHA actual de la rama base (main o develop)
+          BASE_SHA=$(git rev-parse "origin/$BASE")
 
-          # Traemos la rama base para comparar
-          git fetch origin "$BASE" --no-tags
+          # 2. Obtenemos el SHA del punto donde mi rama se separó de la base
+          # (El ancestro común más cercano)
+          MERGE_BASE=$(git merge-base "$BRANCH_SHA" "origin/$BASE")
 
-          # Identificamos el SHA de la rama que estamos probando
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # En un PR, queremos validar el origen de la rama que viene (HEAD del PR)
-            BRANCH_SHA="${{ github.event.pull_request.head.sha }}"
-          else
-            BRANCH_SHA="$(git rev-parse HEAD)"
-          fi
+          echo "Punto de unión detectado: $MERGE_BASE"
+          echo "Último commit de $BASE: $BASE_SHA"
 
-          echo "Validando si $BRANCH nace de el último origin/$BASE ($BASE_SHA)"
-          
-          # Comprobar si la base es ancestro de nuestra rama
-          if ! git merge-base --is-ancestor "origin/$BASE" "$BRANCH_SHA"; then
+          # 3. COMPROBACIÓN DEFINITIVA
+          if [[ "$MERGE_BASE" != "$BASE_SHA" ]]; then
             echo "-------------------------------------------------------"
-            echo "ERROR: La rama $BRANCH está desactualizada o nació mal."
-            echo "No contiene todos los commits de origin/$BASE."
-            echo "-------------------------------------------------------"
-            echo "Para arreglarlo, ejecuta en tu local:"
-            echo "  git fetch origin"
-            echo "  git rebase origin/$BASE"
-            echo "  git push --force-with-lease"
+            echo "ERROR: Origen de rama inválido."
+            echo "Tu rama $BRANCH debe nacer DIRECTAMENTE de el último commit de origin/$BASE."
+            
+            # Detectar si viene de la rama equivocada (opcional pero muy útil)
+            if [[ "$BASE" == "main" ]]; then
+              # Si queríamos main pero detectamos que el punto de unión coincide con develop
+              DEV_SHA=$(git rev-parse "origin/develop")
+              MERGE_WITH_DEV=$(git merge-base "$BRANCH_SHA" "origin/develop")
+              if [[ "$MERGE_WITH_DEV" == "$DEV_SHA" ]]; then
+                echo "AVISO: Parece que has creado el hotfix desde DEVELOP en lugar de MAIN."
+              fi
+            fi
+            
             exit 1
           fi
 
