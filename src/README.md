@@ -3,7 +3,8 @@
 El código sigue una arquitectura modular basada en capas para facilitar el mantenimiento, la escalabilidad y la separación de responsabilidades:
 
 * **src/**: Punto de entrada de la aplicación. 
-    * **main.py**: Define los endpoints (rutas) de la API y orquesta las llamadas a los servicios.
+* **src/api/**: Contiene todo lo referido a la API.
+    * **app.py**: Define los endpoints (rutas) de la API y orquesta las llamadas a los servicios.
 * **src/models/**: Contiene los modelos de datos (Pydantic) utilizados para la validación de entradas y salidas de la API.
     * **caso.py**: Define el modelo CuestionarioAutonomo y otros esquemas relacionados.
 * **src/services/**: Lógica de negocio de la aplicación.
