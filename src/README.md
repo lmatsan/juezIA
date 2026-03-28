@@ -4,9 +4,9 @@ El código sigue una arquitectura modular basada en capas para facilitar el mant
 
 * **src/api/main.py**: Punto de entrada de la aplicación. Define los endpoints (rutas) de la API y orquesta las llamadas a los servicios.
 * **src/models/**: Contiene los modelos de datos (Pydantic) utilizados para la validación de entradas y salidas de la API.
-* **caso.py**: Define el modelo CuestionarioAutonomo y otros esquemas relacionados.
+    * **caso.py**: Define el modelo CuestionarioAutonomo y otros esquemas relacionados.
 * **src/services/**: Lógica de negocio de la aplicación.
-* **analisis.py**: Contiene la clase AnalizadorService, encargada de calcular probabilidades y generar recomendaciones.
+    * **analisis.py**: Contiene la clase AnalizadorService, encargada de calcular probabilidades y generar recomendaciones.
 * **src/api/**: Capa de exposición de la API (controladores/endpoints).
 * **__init__.py**: Archivos necesarios en cada carpeta para definir los paquetes de Python.
 * **requirements.txt**: Listado de dependencias necesarias para ejecutar el proyecto.
