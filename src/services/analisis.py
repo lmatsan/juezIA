@@ -3,14 +3,24 @@ import random
 class AnalizadorService:
     @staticmethod
     def calcular_probabilidad(datos: dict) -> float:
-        # Simulación: si recibe órdenes y no tiene herramientas, la probabilidad sube
-        score = 0
-        if datos['recibe_ordenes']: score += 40
-        if not datos['herramientas_propias']: score += 30
-        if not datos['horario_libre']: score += 20
+        # Se definen los pesos de cada indicio (Total = 100)obabilidad sube
+        PESOS = {
+            "instrucciones_directas": 30,  # El indicio más fuerte de dependencia
+            "herramientas_empresa": 20,    # Indicio clave de ajenidad en los medios
+            "retribucion_fija": 20,        # Indicio de ajenidad en la retribución
+            "horario_impuesto": 15,        # Control del tiempo
+            "ajenidad_clientes": 10,       # Ajenidad en el mercado
+            "exclusividad_de_facto": 5     # Indicio concomitante
+        }
         
-        # Añadimos un poco de aleatoriedad para el PMMV
-        return min(score + random.randint(0, 10), 100)
+        probabilidad = 0.0
+        
+        # Iteramos sobre los datos recibidos y sumamos si el valor es True
+        for indicio, peso in PESOS.items():
+            if datos.get(indicio) is True:
+                probabilidad += peso
+                
+        return float(probabilidad)
 
     @staticmethod
     def generar_consejo_ia(probabilidad: float) -> str:
