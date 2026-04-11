@@ -1,16 +1,20 @@
 ## 📂 Estructura del Proyecto
 
-El código sigue una arquitectura modular basada en capas para facilitar el mantenimiento, la escalabilidad y la separación de responsabilidades:
+El código sigue una arquitectura modular y profesional, separando la lógica de negocio de la infraestructura y asegurando la calidad mediante una suite de pruebas externa al código fuente:
 
-* **src/**: Punto de entrada de la aplicación. 
-* **src/api/**: Contiene todo lo referido a la API.
-    * **app.py**: Define los endpoints (rutas) de la API y orquesta las llamadas a los servicios.
-* **src/models/**: Contiene los modelos de datos (Pydantic) utilizados para la validación de entradas y salidas de la API.
-    * **caso.py**: Define el modelo CuestionarioAutonomo y otros esquemas relacionados.
-* **src/services/**: Lógica de negocio de la aplicación.
-    * **analisis.py**: Contiene la clase AnalizadorService, encargada de calcular probabilidades y generar recomendaciones.
-* **__init__.py**: Archivos necesarios en cada carpeta para definir los paquetes de Python.
-* **requirements.txt**: Listado de dependencias necesarias para ejecutar el proyecto.
+* **`.venv/`**: Entorno virtual de Python donde se gestionan las dependencias de forma aislada.
+* **`src/`**: Carpeta principal que contiene el código fuente de la aplicación.
+    * **`api/v1/`**: Versión 1 de la API. Contiene `app.py`, que registra los routers y configura FastAPI.
+    * **`core/`**: Configuración transversal, gestión de variables de entorno (`config.py`) y excepciones personalizadas.
+    * **`schemas/`**: Modelos de Pydantic para la validación de datos. 
+    * **`services/`**: Capa de orquestación. `analisis.py` procesa la lógica entre la API y los módulos específicos.
+    * **`modules/`**: El cerebro del asistente. Contiene la lógica jurídica organizada por jurisdicciones (ej. `laboral/autonomos`).
+    * **`utils/`**: Funciones de soporte reutilizables, como parseadores de archivos o herramientas de texto.
+* **`tests/`**: Ubicada en la raíz para separar el código de producción del de pruebas.
+    * **`unit/`**: Pruebas unitarias de funciones y reglas aisladas.
+    * **`conftest.py`**: Configuración global de Pytest y definición de fixtures.
+* **`requirements.txt`**: Listado de dependencias necesarias (FastAPI, Pytest, Uvicorn, etc.).
+* **`.gitignore`**: Configuración para excluir archivos temporales, logs y el entorno virtual del repositorio.
 ---
 ## 🏗️ Arquitectura del Sistema
 El siguiente diagrama describe la organización modular de JuezIA, detallando el flujo de datos desde la interfaz de usuario hasta los motores de decisión clínica y legal.
