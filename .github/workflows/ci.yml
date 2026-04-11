@@ -32,19 +32,34 @@ jobs:
     - name: Run tests and save exit code
       id: tests
       run: |
-          mkdir -p test-results
-          PYTHONPATH=src pytest unit_tests/ --capture=tee-sys --cov=model --cov-report=term --cov-report=html --junitxml=test-results/results.xml > test-results/results.log
+        mkdir -p test-results
+        # 1. Añadimos la raíz al PYTHONPATH para que encuentre 'src'
+        # 2. Llamamos explícitamente a 'pytest'
+        # 3. Corregimos --cov=src para que mida tu código real
+        export PYTHONPATH=$PYTHONPATH:.
+        set -o pipefail
+        pytest tests/unit --cov=src --cov-report=term-missing --junitxml=test-results/results.xml | tee test-results/results.log
+      # No ponemos 'set -e' para que el log se guarde aunque los tests fallen
 
     - name: Comment test results and coverage on PR
       uses: actions/github-script@v7
-      if: always()
+      if: always() && github.event_name == 'pull_request'
       with:
         script: |
-            const fs = require('fs');
-            const results = fs.readFileSync('test-results/results.log', 'utf8');
+          const fs = require('fs');
+          const path = 'test-results/results.log';
+          
+          if (fs.existsSync(path)) {
+            const results = fs.readFileSync(path, 'utf8');
+            // GitHub tiene un límite de caracteres en comentarios, cortamos si es muy largo
             const truncated = results.length > 65000 ? results.slice(0, 65000) + '\n...TRUNCATED...' : results;
+            
             github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: ### 🧪 Test Results with Coverage\n\n\``\n${truncated}\n````}); 
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### 🧪 Test Results with Coverage\n\n\`\`\`text\n${truncated}\n\`\`\``
+            });
+          } else {
+            console.log('No se encontró el archivo de log');
+          }
