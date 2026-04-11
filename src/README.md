@@ -82,7 +82,7 @@ Activación:
     ```
 
 #### 2. Instalación de Dependencias
-Una vez activado el entorno, instala todos los paquetes necesarios utilizando el archivo de requerimientos:
+Una vez activado el entorno, instala todos los paquetes necesarios utilizando el archivo de requerimientos: 
 ```bash
 pip install -r requirements.txt
 ```
