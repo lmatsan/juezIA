@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 import logging
 
 # IMPORTACIONES DE NUESTROS NUEVOS ARCHIVOS
-from src.models.caso import CuestionarioFalsoAutonomo
+from src.schemas.caso import CuestionarioFalsoAutonomo
 from src.services.analisis import AnalizadorService
 
 # INICIALIZACIÓN

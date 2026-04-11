@@ -90,7 +90,7 @@ pip install -r requirements.txt
 ### 3. Ejecución del Servidor
 Para lanzar la API, ubicate en la raiz del proyecto JuezIA:
 ```bash
-python -m uvicorn src.api.app:app --reload
+python -m uvicorn src.api.v1.app:app --reload
 ```
 Puedes acceder a la documentación interactiva en:
 *  Swagger UI: http://127.0.0.1:8000/docs
