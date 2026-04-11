@@ -20,8 +20,8 @@ El código sigue una arquitectura modular y profesional, separando la lógica de
 El siguiente diagrama describe la organización modular de JuezIA, detallando el flujo de datos desde la interfaz de usuario hasta los motores de decisión clínica y legal.
 ```mermaid
 graph TD
-    subgraph Frontend_App [Carpeta: /frontend]
-        UI[main.py - Interfaz Streamlit]
+    subgraph Frontend_App [Carpeta: /frontend - FUTURE]
+        UI[interface.py - Streamlit/React FUTURE]
     end
 
     subgraph API_Layer [Carpeta: /src/api/v1]
@@ -46,30 +46,29 @@ graph TD
         T_SRV[unit/services/test_analisis.py]
     end
 
-    %% Flujo de ejecución actual y futuro
-    UI -->|1. Envía JSON| Main
+    %% Flujo de ejecución
+    UI -.->|1. Envía datos FUTURE| Main
     Main -->|2. Valida con| Pyd
     Pyd -.->|3. Error 422 si falla| Main
     
     Main -->|4. Llama al orquestador| Service
     
-    %% --- El "Cuadrado" de Lógica de Negocio y ML ---
-    Service -->|5. Predicción numérica FUTURE| Model
+    %% --- Lógica de Negocio y ML ---
+    Service -.->|5. Predicción numérica FUTURE| Model
     Model -.->|6. % Probabilidad FUTURE| Service
-    Service -->|7. Petición de texto FUTURE| AI
+    Service -.->|7. Petición de texto FUTURE| AI
     AI -.->|8. Recomendación legal FUTURE| Service
-    %% ------------------------------------------------
 
     %% Cierre del ciclo
-    Service -->|9. Resultado completo| Main
-    Main -->|10. Respuesta JSON| UI
+    Service -->|9. Resultado procesado| Main
+    Main -.->|10. Respuesta JSON| UI
 
-    %% Relación de Tests (Blindaje actual)
+    %% Relación de Tests
     T_API -.->|Verifica| Main
     T_SRV -.->|Verifica| Service
 
     %% Estética y Leyenda
-    style UI fill:#1E3A8A,color:#fff
+    style UI fill:#1E3A8A,color:#fff,stroke-dasharray: 5 5
     style Main fill:#2563EB,color:#fff
     style Service fill:#7C3AED,color:#fff,stroke-width:2px
     style Model fill:#10B981,color:#fff,stroke-dasharray: 5 5
