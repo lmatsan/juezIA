@@ -38,8 +38,8 @@ jobs:
         # 3. Corregimos --cov=src para que mida tu código real
         export PYTHONPATH=$PYTHONPATH:.
         set -o pipefail
-        pytest tests/unit --cov=src --cov-report=term-missing --junitxml=test-results/results.xml | tee test-results/results.log
-      # No ponemos 'set -e' para que el log se guarde aunque los tests fallen
+        pytest tests/unit --cov=src --cov-report=term-missing --cov-fail-under=80 --junitxml=test-results/results.xml | tee test-results/results.log
+        echo $? > pytest_exit_code.txt
 
     - name: Comment test results and coverage on PR
       uses: actions/github-script@v7
@@ -63,7 +63,7 @@ jobs:
           } else {
             console.log('No se encontró el archivo de log');
           }
-            
+
     - name: Validacion final de tests y cobertura
       if: always()
       run: |
