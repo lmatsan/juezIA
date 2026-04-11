@@ -1,10 +1,10 @@
-name: CI JuezIA - Unit Tests & Coverage
+name: CI - Test Unitarios y Cobertura
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ] 
 
 jobs:
   test:
@@ -23,6 +23,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+
+    - name: Secret Leak Detection
+      run: |
+        # Un check rápido: Si el .env está en el repo, el pipeline falla
+        if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
 
     - name: Ejecutar Unit Tests con Coverage
       run: |
