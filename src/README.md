@@ -24,45 +24,59 @@ graph TD
         UI[main.py - Interfaz Streamlit]
     end
 
-    subgraph API_Layer [Carpeta: /src/api]
-        Main[main.py - FastAPI: Endpoints + Lógica de Entrada]
+    subgraph API_Layer [Carpeta: /src/api/v1]
+        Main[app.py - FastAPI: Endpoints + Error Handlers]
     end
 
-    subgraph Data_Models [Carpeta: /src/models]
-        Pyd[caso.py - Esquemas Pydantic]
+    subgraph Data_Validation [Carpeta: /src/schemas]
+        Pyd[caso.py - Pydantic V2 Models]
     end
 
-    subgraph Business_Logic [Carpeta: /src/services]
-        Service[analisis.py - AnalizadorService]
-        AI[ai_engine.py - Conexión LLM]
+    subgraph Business_Logic [Carpeta: /src/services - EL MOTOR]
+        Service[analisis.py - AnalizadorService: Orquestador]
+        AI[ai_engine.py - Conexión LLM FUTURE]
     end
 
-    subgraph ML_Assets [Carpeta: /src/data]
-        Model[.pkl - Modelo Entrenado]
+    subgraph ML_Assets [Carpeta: /src/data - FUTURE]
+        Model[.pkl - Modelo Clasificador Entrenado FUTURE]
     end
 
-    %% Flujo de ejecución corregido
-    UI -->|1. Envía datos| Main
+    subgraph Quality_Assurance [Carpeta: /tests - CALIDAD ACTUAL]
+        T_API[unit/api/test_app.py]
+        T_SRV[unit/services/test_analisis.py]
+    end
+
+    %% Flujo de ejecución actual y futuro
+    UI -->|1. Envía JSON| Main
     Main -->|2. Valida con| Pyd
-    Pyd -->|3. Retorna objeto limpio| Main
+    Pyd -.->|3. Error 422 si falla| Main
     
-    Main -->|4. Llama al servicio| Service
+    Main -->|4. Llama al orquestador| Service
     
-    %% El "Cuadrado" de Lógica de Negocio
-    Service -->|5. Predicción numérica| Model
-    Model -->|6. % Probabilidad| Service
-    Service -->|7. Petición de texto| AI
-    AI -->|8. Recomendación legal| Service
-    
+    %% --- El "Cuadrado" de Lógica de Negocio y ML ---
+    Service -->|5. Predicción numérica FUTURE| Model
+    Model -.->|6. % Probabilidad FUTURE| Service
+    Service -->|7. Petición de texto FUTURE| AI
+    AI -.->|8. Recomendación legal FUTURE| Service
+    %% ------------------------------------------------
+
     %% Cierre del ciclo
     Service -->|9. Resultado completo| Main
     Main -->|10. Respuesta JSON| UI
 
-    %% Estética
+    %% Relación de Tests (Blindaje actual)
+    T_API -.->|Verifica| Main
+    T_SRV -.->|Verifica| Service
+
+    %% Estética y Leyenda
     style UI fill:#1E3A8A,color:#fff
     style Main fill:#2563EB,color:#fff
-    style Service fill:#7C3AED,color:#fff,stroke-width:4px
-    style Model fill:#10B981,color:#fff
+    style Service fill:#7C3AED,color:#fff,stroke-width:2px
+    style Model fill:#10B981,color:#fff,stroke-dasharray: 5 5
+    style AI fill:#8B5CF6,color:#fff,stroke-dasharray: 5 5
+    style T_API fill:#059669,color:#fff
+    style T_SRV fill:#059669,color:#fff
+    style Pyd fill:#F59E0B,color:#fff
 ```
 
 ## 🚀 Guía de Ejecución
