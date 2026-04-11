@@ -63,10 +63,25 @@ graph TD
 
 ## 🚀 Guía de Ejecución
 
-### 1. Configuración del Entorno Virtual
+Puedes ejecutar este proyecto de dos formas: mediante un entorno local o usando Docker.
 
+### Opción A: Entorno Local (Desarrollo)
+#### 1. Configuración del Entorno Virtual
+Es necesario crear un entorno para aislar las dependencias:
+```bash
+python -m venv .venv
+```
+Activación:
+    **Windows**: 
+    ```bash 
+    .venv\Scripts\activate
+    ```
+    **macOS/Linux**: 
+    ```bash 
+    source .venv/bin/activate
+    ```
 
-### 2. Instalación de Dependencias
+#### 2. Instalación de Dependencias
 Una vez activado el entorno, instala todos los paquetes necesarios utilizando el archivo de requerimientos:
 ```bash
 pip install -r requirements.txt
@@ -77,7 +92,13 @@ Para lanzar la API, ubicate en la raiz del proyecto JuezIA:
 ```bash
 python -m uvicorn src.api.app:app --reload
 ```
-Puedes acceder a la documentación interactiva en http://127.0.0.1:8000/docs
+Puedes acceder a la documentación interactiva en:
+*  Swagger UI: http://127.0.0.1:8000/docs
+*  ReDoc: http://127.0.0.1:8000/redoc
+
+### Opción B: Docker (Recomendado para Despliegue)
+PDTE DE IMPLEMENTAR
+
 
 ### 4. Poblado de Datos (Opcional)
 
