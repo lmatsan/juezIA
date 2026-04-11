@@ -26,8 +26,12 @@ def test_analizar_caso_mocked(mock_service):
     payload = {
         "nombre_trabajador": "Test Bot",
         "tiene_horario": True,
-        "usa_herramientas_empresa": True,
-        "cuantia_factura": 2000.0
+        "herramientas_empresa": True,
+        "instrucciones_directas": True,
+        "horario_impuesto": True,
+        "ajenidad_clientes": True,
+        "retribucion_fija": True,
+        "exclusividad_de_facto": True
     }
     response = client.post("/analizar", json=payload)
 
