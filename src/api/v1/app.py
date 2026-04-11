@@ -43,7 +43,7 @@ def read_root():
 @app.post("/analizar")
 async def analizar_caso(cuestionario: CuestionarioFalsoAutonomo):
     # 1. Se transforma el modelo a diccionario
-    datos = cuestionario.dict()
+    datos = cuestionario.model_dump()
     
     # 2. Se llama a los servicios dummy
     prob = AnalizadorService.calcular_probabilidad(datos)
@@ -55,3 +55,13 @@ async def analizar_caso(cuestionario: CuestionarioFalsoAutonomo):
         "recomendacion": consejo,
         "mensaje": "Análisis realizado con motor experimental PMMV"
     }
+
+# TEST PARA CUBRIR EL MANEJADOR DE ERRORES
+def test_analizar_caso_validation_error(client):
+    """Fuerza el error 422 para cubrir las líneas 23-30 de app.py"""
+    # Enviamos algo que no sea un CuestionarioFalsoAutonomo válido
+    payload = {"dato_incorrecto": "error"} 
+    response = client.post("/analizar", json=payload)
+    
+    assert response.status_code == 422
+    assert response.json()["error"] == "Invalid data"
