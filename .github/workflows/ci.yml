@@ -31,12 +31,24 @@ jobs:
 
     - name: Ejecutar Unit Tests con Coverage
       run: |
-        # Añadimos PYTHONPATH=. para que reconozca la carpeta src desde la raíz
-        export PYTHONPATH=$PYTHONPATH:.
-        pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
+        # Activamos que falle si falla el primer comando de la tubería
+        set -e
+        set -o pipefail
         
-        # Se vuelcan las salidas de Pytest y al Summary de GitHub
+        export PYTHONPATH=$PYTHONPATH:.
+        
+        # Ahora, si pytest devuelve error por coverage < 80, el pipeline se detendrá aquí
+        pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
+
+    - name: Generar Reporte en el Resumen
+      if: always() # Queremos ver el reporte tanto si falla (rojo) como si pasa (verde)
+      run: |
         echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
-        cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
+        # Verificamos si el archivo existe antes de intentar leerlo
+        if [ -f coverage_report.txt ]; then
+          cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No se generó reporte de cobertura." >> $GITHUB_STEP_SUMMARY
+        fi
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
