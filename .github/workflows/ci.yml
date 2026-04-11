@@ -30,36 +30,39 @@ jobs:
         if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
 
     - name: Ejecutar Unit Tests con Coverage
-      # Importante: no usamos set -e aquí para poder capturar el error
       run: |
         export PYTHONPATH=$PYTHONPATH:.
-        
-        # Ejecutamos pytest, guardamos el log y capturamos SU código de salida
-        # Usamos pipefail para que el error de pytest no se pierda por el 'tee'
         set -o pipefail
-        pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
-        
-        # Guardamos el resultado de pytest en un archivo para el siguiente paso
+        # Generamos XML para el bot y TXT para el resumen
+        pytest --cov=src tests/unit --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
         echo $? > pytest_exit_code.txt
 
-    - name: Generar Reporte en el Resumen
-      if: always() # Se ejecuta SIEMPRE (aunque lo anterior falle)
+    - name: Publicar Reporte en el Pull Request
+      uses: MishaKav/pytest-coverage-comment@main
+      # GitHub Action externa (creada por un desarrollador llamado Misha Kavalevich) que 
+      # actúa como un "reportero" automático para el repositorio
+      if: always() && github.event_name == 'pull_request'
+      with:
+        pytest-xml-coverage-path: ./coverage.xml
+        title: "📊 Reporte de Cobertura - JuezIA"
+        badge-title: "Cobertura"
+        hide-badge: false
+        hide-report: false
+        create-new-comment: false # Actualiza el mismo comentario en lugar de inundar el PR
+
+    - name: Generar Reporte en el Resumen (Action Summary)
+      if: always()
       run: |
         echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
-        if [ -f coverage_report.txt ]; then
-          cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
-        else
-          echo "No se generó reporte." >> $GITHUB_STEP_SUMMARY
-        fi
+        [ -f coverage_report.txt ] && cat coverage_report.txt >> $GITHUB_STEP_SUMMARY || echo "No se generó reporte." >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
     - name: Validar Resultado de Tests
       if: always()
       run: |
-        # Leemos el código que guardamos antes
         EXIT_CODE=$(cat pytest_exit_code.txt)
         if [ "$EXIT_CODE" -ne 0 ]; then
-          echo "❌ Los tests fallaron o la cobertura es insuficiente (Código: $EXIT_CODE)"
+          echo "❌ Los tests fallaron o cobertura insuficiente."
           exit $EXIT_CODE
         fi
