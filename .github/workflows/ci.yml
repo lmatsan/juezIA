@@ -34,5 +34,9 @@ jobs:
         # Añadimos PYTHONPATH=. para que reconozca la carpeta src desde la raíz
         export PYTHONPATH=$PYTHONPATH:.
         pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80
-
         
+        # Se convertierte el reporte en algo legible para el resumen de GitHub
+        echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
+        cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
