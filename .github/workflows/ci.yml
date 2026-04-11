@@ -63,3 +63,16 @@ jobs:
           } else {
             console.log('No se encontró el archivo de log');
           }
+            
+    - name: Validacion final de tests y cobertura
+      if: always()
+      run: |
+        # Recuperamos el código de salida de pytest
+        # Si el archivo no existe o el código no es 0, fallamos
+        EXIT_CODE=$(cat pytest_exit_code.txt 2>/dev/null || echo 1)
+        
+        if [ "$EXIT_CODE" -ne 0 ]; then
+          echo "❌ Error: Los tests fallaron o la cobertura es inferior al 80%."
+          exit $EXIT_CODE
+        fi
+        echo "✅ Todos los tests pasaron con la cobertura requerida."
