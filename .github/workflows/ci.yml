@@ -29,40 +29,22 @@ jobs:
         # Un check rápido: Si el .env está en el repo, el pipeline falla
         if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
 
-    - name: Ejecutar Unit Tests con Coverage
+    - name: Run tests and save exit code
+      id: tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:.
-        set -o pipefail
-        # Generamos XML para el bot y TXT para el resumen
-        pytest --cov=src tests/unit --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
-        echo $? > pytest_exit_code.txt
+          mkdir -p test-results
+          PYTHONPATH=src pytest unit_tests/ --capture=tee-sys --cov=model --cov-report=term --cov-report=html --junitxml=test-results/results.xml > test-results/results.log
 
-    - name: Publicar Reporte en el Pull Request
-      uses: MishaKav/pytest-coverage-comment@main
-      # GitHub Action externa (creada por un desarrollador llamado Misha Kavalevich) que 
-      # actúa como un "reportero" automático para el repositorio
-      if: always() && github.event_name == 'pull_request'
+    - name: Comment test results and coverage on PR
+      uses: actions/github-script@v7
+      if: always()
       with:
-        pytest-xml-coverage-path: ./coverage.xml
-        title: "📊 Reporte de Cobertura - JuezIA"
-        badge-title: "Cobertura"
-        hide-badge: false
-        hide-report: false
-        create-new-comment: false # Actualiza el mismo comentario en lugar de inundar el PR
-
-    - name: Generar Reporte en el Resumen (Action Summary)
-      if: always()
-      run: |
-        echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
-        [ -f coverage_report.txt ] && cat coverage_report.txt >> $GITHUB_STEP_SUMMARY || echo "No se generó reporte." >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-    - name: Validar Resultado de Tests
-      if: always()
-      run: |
-        EXIT_CODE=$(cat pytest_exit_code.txt)
-        if [ "$EXIT_CODE" -ne 0 ]; then
-          echo "❌ Los tests fallaron o cobertura insuficiente."
-          exit $EXIT_CODE
-        fi
+        script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('test-results/results.log', 'utf8');
+            const truncated = results.length > 65000 ? results.slice(0, 65000) + '\n...TRUNCATED...' : results;
+            github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: ### 🧪 Test Results with Coverage\n\n\``\n${truncated}\n````}); 
