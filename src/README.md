@@ -104,3 +104,9 @@ PDTE DE IMPLEMENTAR
 
 
 ### 5. Ejecución de Tests
+
+## 🧪 Calidad de Código (CI)
+
+Este proyecto utiliza **GitHub Actions** para validar cada cambio automáticamente.
+* **Unit Tests:** Se ejecutan con `pytest`.
+* **Coverage:** Se requiere un mínimo del 80% de cobertura de código para permitir el despliegue.
