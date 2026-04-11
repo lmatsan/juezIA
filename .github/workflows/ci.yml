@@ -31,7 +31,8 @@ jobs:
 
     - name: Ejecutar Unit Tests con Coverage
       run: |
-        # --cov=src: Mide la cobertura de la lógica de negocio
-        # tests/unit/: Solo ejecuta los tests de esta carpeta
-        # --cov-fail-under=80: El pipeline falla si no llegas al 80% de cobertura
-        pytest --cov=src tests/unit/ --cov-report=term-missing --cov-fail-under=80
+        # Añadimos PYTHONPATH=. para que reconozca la carpeta src desde la raíz
+        export PYTHONPATH=$PYTHONPATH:.
+        pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80
+
+        
