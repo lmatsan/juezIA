@@ -30,36 +30,36 @@ jobs:
         if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
 
     - name: Ejecutar Unit Tests con Coverage
-      id: pytest_step
+      # Importante: no usamos set -e aquí para poder capturar el error
       run: |
         export PYTHONPATH=$PYTHONPATH:.
         
-        # 1. Ejecutamos pytest y guardamos el log, PERO permitimos que continúe aunque falle
-        # Usamos 'set +e' para que no mate el job aquí mismo
-        set +e
+        # Ejecutamos pytest, guardamos el log y capturamos SU código de salida
+        # Usamos pipefail para que el error de pytest no se pierda por el 'tee'
+        set -o pipefail
         pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
-        PYTEST_EXIT_CODE=$?
-        set -e
         
-        # 2. Guardamos el código de salida para usarlo al final
-        echo "EXIT_CODE=$PYTEST_EXIT_CODE" >> $GITHUB_ENV
+        # Guardamos el resultado de pytest en un archivo para el siguiente paso
+        echo $? > pytest_exit_code.txt
 
     - name: Generar Reporte en el Resumen
-      if: always() 
+      if: always() # Se ejecuta SIEMPRE (aunque lo anterior falle)
       run: |
         echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
         if [ -f coverage_report.txt ]; then
           cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
         else
-          echo "No se pudo generar el reporte de cobertura." >> $GITHUB_STEP_SUMMARY
+          echo "No se generó reporte." >> $GITHUB_STEP_SUMMARY
         fi
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-    - name: Validar Resultado Final
+    - name: Validar Resultado de Tests
+      if: always()
       run: |
-        # 3. Aquí es donde realmente hacemos que el check se ponga en ROJO si pytest falló
-        if [ "${{ env.EXIT_CODE }}" -ne 0 ]; then
-          echo "La cobertura es insuficiente o los tests fallaron."
-          exit ${{ env.EXIT_CODE }}
+        # Leemos el código que guardamos antes
+        EXIT_CODE=$(cat pytest_exit_code.txt)
+        if [ "$EXIT_CODE" -ne 0 ]; then
+          echo "❌ Los tests fallaron o la cobertura es insuficiente (Código: $EXIT_CODE)"
+          exit $EXIT_CODE
         fi
