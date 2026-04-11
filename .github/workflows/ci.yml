@@ -30,25 +30,36 @@ jobs:
         if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
 
     - name: Ejecutar Unit Tests con Coverage
+      id: pytest_step
       run: |
-        # Activamos que falle si falla el primer comando de la tubería
-        set -e
-        set -o pipefail
-        
         export PYTHONPATH=$PYTHONPATH:.
         
-        # Ahora, si pytest devuelve error por coverage < 80, el pipeline se detendrá aquí
+        # 1. Ejecutamos pytest y guardamos el log, PERO permitimos que continúe aunque falle
+        # Usamos 'set +e' para que no mate el job aquí mismo
+        set +e
         pytest --cov=src tests/unit --cov-report=term-missing --cov-fail-under=80 | tee coverage_report.txt
+        PYTEST_EXIT_CODE=$?
+        set -e
+        
+        # 2. Guardamos el código de salida para usarlo al final
+        echo "EXIT_CODE=$PYTEST_EXIT_CODE" >> $GITHUB_ENV
 
     - name: Generar Reporte en el Resumen
-      if: always() # Queremos ver el reporte tanto si falla (rojo) como si pasa (verde)
+      if: always() 
       run: |
         echo "### 📊 Reporte de Cobertura - JuezIA" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
-        # Verificamos si el archivo existe antes de intentar leerlo
         if [ -f coverage_report.txt ]; then
           cat coverage_report.txt >> $GITHUB_STEP_SUMMARY
         else
-          echo "No se generó reporte de cobertura." >> $GITHUB_STEP_SUMMARY
+          echo "No se pudo generar el reporte de cobertura." >> $GITHUB_STEP_SUMMARY
         fi
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+    - name: Validar Resultado Final
+      run: |
+        # 3. Aquí es donde realmente hacemos que el check se ponga en ROJO si pytest falló
+        if [ "${{ env.EXIT_CODE }}" -ne 0 ]; then
+          echo "La cobertura es insuficiente o los tests fallaron."
+          exit ${{ env.EXIT_CODE }}
+        fi
