@@ -69,7 +69,7 @@ Puedes ejecutar este proyecto de dos formas: mediante un entorno local o usando 
 #### 1. Configuración del Entorno Virtual
 Es necesario crear un entorno para aislar las dependencias:
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv
 ```
 Activación:
     **Windows**: 
