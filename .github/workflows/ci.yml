@@ -24,7 +24,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Secret Leak Detection
+    - name: Checkeo sin secretos en el codigo subido
       run: |
         # Un check rápido: Si el .env está en el repo, el pipeline falla
         if [ -f .env ]; then echo "ERROR: .env file found in repository!" && exit 1; fi
