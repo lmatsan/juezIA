@@ -1,6 +1,14 @@
+### Python ###
 __pycache__/
 *.pyc
+
+### Entornos Virtuales ###
+.venv/
+
+### Variables de Entorno (Seguridad) ###
 .env
 .env.*
-vent/
+
+### IDEs y logs ###
 .vscode/
+*.log
