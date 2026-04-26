@@ -16,4 +16,4 @@ El proyecto no busca reemplazar el juicio humano, sino analizar hasta qué punto
 ## 🚧 Estado del proyecto
 
 🟡 Fase inicial --- definición de alcance, arquitectura y caso de uso
-definitivo.
+definitivo. 
