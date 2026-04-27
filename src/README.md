@@ -2,14 +2,16 @@
 
 El código sigue una arquitectura modular y profesional, separando la lógica de negocio de la infraestructura y asegurando la calidad mediante una suite de pruebas externa al código fuente:
 
-* **`.venv/`**: Entorno virtual de Python donde se gestionan las dependencias de forma aislada.
+* **`data/`**: Archivos de configuración estática. `leyes_relevantes.json` define qué normas del BOE se indexan. 
 * **`src/`**: Carpeta principal que contiene el código fuente de la aplicación.
     * **`api/v1/`**: Versión 1 de la API. Contiene `app.py`, que registra los routers y configura FastAPI.
+        * **`routers/`**: Endpoints organizados por dominio. 
     * **`core/`**: Configuración transversal, gestión de variables de entorno (`config.py`) y excepciones personalizadas.
     * **`schemas/`**: Modelos de Pydantic para la validación de datos. 
     * **`services/`**: Capa de orquestación. `analisis.py` procesa la lógica entre la API y los módulos específicos.
     * **`modules/`**: El cerebro del asistente. Contiene la lógica jurídica organizada por jurisdicciones (ej. `laboral/autonomos`).
     * **`utils/`**: Funciones de soporte reutilizables, como parseadores de archivos o herramientas de texto.
+* **`pipelines/`**: Procesos automáticos o semi-automáticos que mantienen el sistema en buen estado. No forman parte del flujo de usuario. Organizados por fuente de datos (`boe/`, `cendoj/`).
 * **`tests/`**: Ubicada en la raíz para separar el código de producción del de pruebas.
     * **`unit/`**: Pruebas unitarias de funciones y reglas aisladas.
     * **`conftest.py`**: Configuración global de Pytest y definición de fixtures.
