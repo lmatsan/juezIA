@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: JuezIA
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
