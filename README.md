@@ -19,7 +19,7 @@ El proyecto no busca reemplazar el juicio humano, sino analizar hasta qué punto
 definitivo. 
 
 
-## 🚧 Uso de dockercompose
+## 🐳⚙️ Uso de dockercompose
 Para arrancar dockercompose es necesario: 
 
 🟡 Ejecutar el comando "docker compose up --build" : Construye (o reconstruye) la imagen desde el Dockerfile y luego arranca los contenedores definidos en docker-compose. 
