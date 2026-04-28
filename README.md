@@ -23,4 +23,5 @@ definitivo.
 Para arrancar dockercompose es necesario: 
 
 🟡 Ejecutar el comando "docker compose up --build" : Construye (o reconstruye) la imagen desde el Dockerfile y luego arranca los contenedores definidos en docker-compose. 
+
 🟡 Conectar desde un navegador a http://localhost:8080/docs  y validar que funciona correctamente
