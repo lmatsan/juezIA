@@ -67,6 +67,7 @@ async def listar_leyes(repo: LeyRepositoryBase = Depends(get_repository)) -> lis
     description="Devuelve los metadatos de una ley concreta. Ejemplo: BOE-A-2015-11430",
 )
 async def obtener_ley(identifier: str, repo: LeyRepositoryBase = Depends(get_repository)) -> LeyMetadata:
+    
     ley = await repo.get(identifier)
     if ley is None:
         raise HTTPException(status_code=404, detail=f"Ley '{identifier}' no encontrada.")

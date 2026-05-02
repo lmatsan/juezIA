@@ -1,27 +1,28 @@
+import os  
+from dotenv import load_dotenv
 import json
 import logging
-from datetime import date
 from pathlib import Path
 from typing import Optional
+from datetime import date
+
 
 import httpx
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuración
+load_dotenv()
 
 LEYES_RELEVANTES_PATH = Path(__file__).parent.parent.parent / "data" / "leyes_relevantes.json"
 LEGALIZE_ES_RAW_URL   = "https://raw.githubusercontent.com/legalize-dev/legalize-es/main/es/{identifier}.md"
-API_INGESTAR_URL      = "http://localhost:8000/v1/leyes/ingestar"
-API_LEY_URL           = "http://localhost:8000/v1/leyes/{identifier}"
-
-
-# Entry point 
+API_BASE_URL = os.getenv("API_URL", "http://localhost:8000")
+API_INGESTAR_URL = f"{API_BASE_URL}/v1/leyes/ingestar"
+API_LEY_URL      = f"{API_BASE_URL}/v1/leyes/{identifier}"
 
 def main() -> None:
     identifiers = _cargar_identifiers()
-    logger.info(f"Iniciando sync de {len(identifiers)} leyes.")
+    logger.info(f"Iniciando build_snapshot con {len(identifiers)} leyes.")
 
     resultados = {"actualizada": [], "omitida": [], "error": []}
 
@@ -45,7 +46,7 @@ def main() -> None:
                 logger.error(f"[ERROR] {identifier}: {exc}")
 
     logger.info(
-        f"Sync completado. "
+        f"Build completado. "
         f"Actualizadas: {len(resultados['actualizada'])} | "
         f"Omitidas: {len(resultados['omitida'])} | "
         f"Errores: {len(resultados['error'])}"
@@ -53,8 +54,6 @@ def main() -> None:
     if resultados["error"]:
         logger.warning(f"Leyes con error: {resultados['error']}")
 
-
-# Helpers
 def _cargar_identifiers() -> list[str]:
     with open(LEYES_RELEVANTES_PATH, encoding="utf-8") as f:
         datos = json.load(f)
@@ -75,10 +74,6 @@ def _extraer_last_updated(contenido_md: str) -> Optional[date]:
 
 
 def _obtener_last_updated_local(client: httpx.Client, identifier: str) -> Optional[date]:
-    """
-    Consulta la API para obtener la last_updated de la ley ya indexada.
-    Devuelve None si la ley no existe aún en ChromaDB.
-    """
     url = API_LEY_URL.format(identifier=identifier)
     response = client.get(url)
     if response.status_code == 404:
@@ -93,12 +88,6 @@ def _necesita_actualizacion(
     repo: Optional[date],
     local: Optional[date],
 ) -> bool:
-    """
-    Actualiza si:
-    - La ley no existe en local todavía.
-    - La versión del repo es más reciente que la local.
-    - No se puede determinar la fecha del repo (repo=None): actualiza por precaución.
-    """
     if local is None:
         return True
     if repo is None:
