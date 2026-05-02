@@ -37,7 +37,7 @@ class LeyMetadata(BaseModel):
     )
     eli: Optional[str] = Field(
         default=None,
-        description="European Legislation Identifier (ELI) de la norma, si está disponible. "
+        description="European Legislation Identifier (ELI) de la norma, si está disponible. ",
         examples=["https://www.boe.es/eli/es/rdlg/2015/10/23/2/con"],
     )
 
