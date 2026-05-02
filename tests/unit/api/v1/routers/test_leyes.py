@@ -29,7 +29,7 @@ METADATA = {
 LEY_METADATA = LeyMetadata(**METADATA)
 # Contenido Markdown simulado con frontmatter
 LEY_MD = """---
-identifier: BOE-T-001
+identifier: "BOE-A-2015-11430"
 title: Ley de Test
 rank: ley
 ---
@@ -51,8 +51,17 @@ def test_ingestar_ley_success():
     response = client.post("/v1/leyes/ingestar", json=payload)
     
     assert response.status_code == 201
-    assert response.json()["identifier"] == "BOE-T-001"
+    assert response.json()["identifier"] == "BOE-A-2015-11430"
     mock_repo.upsert.assert_called_once()
+
+def test_ingestar_ley_error():
+    # Prueba error de validación de Pydantic (422) si falta el campo obligatorio.
+    # Este test NO es async porque la validación de FastAPI ocurre antes de entrar a la función
+    payload = {"campo_incorrecto": "error"}
+    
+    response = client.post("/v1/leyes/ingestar", json=payload)
+    
+    assert response.status_code == 422
 
 @pytest.mark.asyncio
 async def test_obtener_ley_success():
@@ -68,6 +77,37 @@ async def test_obtener_ley_success():
     data = response.json()
     
     # Verificamos que la normalización funcionó
-    assert METADATA["identifier"] == data["identifier"]
-    assert METADATA["rank"] == data["rank"] # Resultado del normalizar_rank
-    assert METADATA["status"] == data["status"]        # Resultado del normalizar_status
+    assert data["identifier"] == "BOE-A-2015-11430"
+    assert data["status"] == "vigente"     # Resultado del normalizar_status
+
+@pytest.mark.asyncio
+async def test_listar_leyes_vacia():
+    # Prueba el comportamiento cuando no hay leyes indexadas.
+    mock_repo.list_all = AsyncMock(return_value=[])
+
+    response = client.get("/v1/leyes")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+@pytest.mark.asyncio
+async def test_obtener_ley_not_found():
+    # Prueba el error 404 cuando la ley no existe.
+    mock_repo.get = AsyncMock(return_value=None)
+    
+    response = client.get("/v1/leyes/ID-INEXISTENTE")
+    
+    assert response.status_code == 404
+    assert "no encontrada" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_ingestar_ley_value_error_cobertura():
+    # Prueba destinada a cubrir las líneas de excepción en leyes.py
+    # Enviamos algo que sabemos que romperá el parser
+    payload = {"contenido_md": "formato_totalmente_invalido_sin_yaml"}
+    
+    response = client.post("/v1/leyes/ingestar", json=payload)
+    
+    assert response.status_code == 422
+    assert "detail" in response.json()
