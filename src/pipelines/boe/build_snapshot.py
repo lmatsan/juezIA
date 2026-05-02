@@ -7,9 +7,6 @@ from typing import Optional
 from datetime import date
 import sys
 
-print(f"DEBUG: PYTHONPATH es {sys.path[0]}")
-print(f"DEBUG: Directorio actual es {os.getcwd()}")
-
 import httpx
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +20,7 @@ if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
 LEYES_RELEVANTES_PATH = root_path / "data" / "leyes_relevantes.json"
-LEGALIZE_ES_RAW_URL   = "https://github.com/legalize-dev/legalize-es/blob/main/es/{identifier}.md"
+LEGALIZE_ES_RAW_URL = "https://raw.githubusercontent.com/legalize-dev/legalize-es/main/es/{year}/{identifier}.md"
 API_BASE_URL = os.getenv("API_URL", "http://localhost:8000")
 API_INGESTAR_URL = f"{API_BASE_URL}/v1/leyes/ingestar"
 API_LEY_URL      = f"{API_BASE_URL}/v1/leyes/{{identifier}}"
@@ -69,7 +66,14 @@ def _cargar_identifiers() -> list[str]:
 
 
 def _descargar_ley(client: httpx.Client, identifier: str) -> str:
-    url = LEGALIZE_ES_RAW_URL.format(identifier=identifier)
+    # Extraemos el año del identificador (ej: de 'BOE-A-2015-11430' sacamos '2015')
+    try:
+        year = identifier.split("-")[2]
+    except IndexError:
+        logger.error(f"Formato de identificador inválido: {identifier}")
+        raise
+    url = LEGALIZE_ES_RAW_URL.format(year=year, identifier=identifier)
+    
     response = client.get(url)
     response.raise_for_status()
     return response.text
