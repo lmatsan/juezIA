@@ -9,10 +9,16 @@ on:
 
   workflow_dispatch:
 
+  schedule:
+  - cron: '0 0 1 * *' #"A las 00:00, el día 1 de cada mes"   
+
 jobs:
   snapshot:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
