@@ -11,7 +11,7 @@ def test_read_root():
     assert response.json() == {"status": "JuezIA API Running"}
 
 # Usamos patch para "congelar" el servicio real
-# Nota: La ruta debe ser donde se USA el servicio, no donde se define
+# Nota: La ruta debe ser donde se usa el servicio, no donde se define
 @patch("src.api.v1.app.AnalizadorService")
 def test_analizar_caso_mocked(mock_service):
     """Testeamos la API sin tocar la lógica real de AnalizadorService"""
@@ -45,3 +45,13 @@ def test_analizar_caso_mocked(mock_service):
     
     # Verificamos que el servicio fue llamado exactamente con los datos que enviamos
     mock_service.calcular_probabilidad.assert_called_once()
+
+# TEST PARA CUBRIR EL MANEJADOR DE ERRORES
+def test_analizar_caso_validation_error():
+    """Fuerza el error 422 para cubrir las líneas 23-30 de app.py"""
+    # Enviamos algo que no sea un CuestionarioFalsoAutonomo válido
+    payload = {"dato_incorrecto": "error"} 
+    response = client.post("/analizar", json=payload)
+    
+    assert response.status_code == 422
+    assert response.json()["error"] == "Invalid data"

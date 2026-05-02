@@ -9,7 +9,7 @@ from src.utils.boe.parser_ley import parsear_ley
 from src.schemas.ley import LeyMetadata
 from src.utils.boe.parser_ley import parsear_ley
 
-router = APIRouter(prefix="/v1/leyes", tags=["leyes"])
+router = APIRouter(prefix="/v1/leyes", tags=["Leyes BOE"])
 
 class IngestarLeyRequest(BaseModel):
     contenido_md: str
@@ -42,7 +42,7 @@ async def ingestar_ley(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    await _guardar_en_chromadb(metadata, contenido)
+    await repo.upsert(metadata, contenido)
 
     return IngestarLeyResponse(
         identifier=metadata.identifier,
@@ -75,31 +75,3 @@ async def obtener_ley(identifier: str, repo: LeyRepositoryBase = Depends(get_rep
     return metadata
 
 
-# Funciones auxiliares para interactuar con ChromaDB (implementación pendiente)
-async def _guardar_en_chromadb(metadata: LeyMetadata, contenido: str) -> None:
-    """
-    TODO: integrar con ChromaDB.
-
-    Operación upsert usando metadata.identifier como document_id
-    para garantizar idempotencia.
-    """
-    raise NotImplementedError
-
-async def _listar_desde_chromadb() -> list[LeyMetadata]:
-    """
-    TODO: integrar con ChromaDB.
-
-    Recuperar todos los documentos de la colección BOE
-    y mapear sus metadatos a LeyMetadata.
-    """
-    raise NotImplementedError
-
-
-async def _obtener_desde_chromadb(identifier: str) -> Optional[LeyMetadata]:
-    """
-    TODO: integrar con ChromaDB.
-
-    Buscar por document_id = identifier.
-    Devolver None si no existe.
-    """
-    raise NotImplementedError
