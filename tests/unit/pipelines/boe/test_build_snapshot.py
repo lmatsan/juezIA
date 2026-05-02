@@ -20,59 +20,59 @@ Contenido de la ley"""
 
 @respx.mock
 def test_build_snapshot_ingesta_nueva():
-    # Prueba el siguiente caso: La ley no existe en nuestra API local, debe ingestarla.
-    # 1. Mock de lectura de archivo leyes_relevantes.json
+    # Prueba el siguiente caso: La ley no existe en la API local, debe ingestarla.
+    # Mock de lectura de archivo leyes_relevantes.json
     with patch("builtins.open", mock_open(read_data=MOCK_IDENTIFIERS)):
         
-        # 2. Mock de descarga desde GitHub (Legalize-es)
+        # Mock de descarga desde GitHub (Legalize-es)
         respx.get(url=re.compile(r"raw\.githubusercontent.com/.*")).mock(
             return_value=Response(200, text=MOCK_MD)
         )
         
-        # 3. Mock de consulta a nuestra API local (Devuelve 404 porque no existe)
+        # Mock de consulta a la API local (Devuelve 404 porque no existe)
         respx.get(url=re.compile(r"/v1/leyes/BOE-A-2015-11430")).mock(
             return_value=Response(404)
         )
         
-        # 4. Mock del POST de ingesta a nuestra API local (Devuelve 201 Created)
+        # Mock del POST de ingesta a la API local (Devuelve 201 Created)
         ingesta_route = respx.post(API_INGESTAR_URL).mock(
             return_value=Response(201, json={"identifier": "BOE-A-2015-11430", "message": "ok"})
         )
 
         main()
 
-        # Verificamos que se intentó ingestar
+        # Se verifica que se intentó ingestar
         assert ingesta_route.called
 
 @respx.mock
 def test_build_snapshot_omitida_ya_al_dia():
     # Prueba el siguiente caso: Cubre el bloque 'else': la ley local ya está actualizada."""
     with patch("builtins.open", mock_open(read_data=MOCK_IDENTIFIERS)):
-        # 1. GitHub devuelve una ley con last_updated: 2024-01-01
+        # GitHub devuelve una ley con last_updated: 2024-01-01
         respx.get(url=re.compile(r"raw\.githubusercontent\.com/.*")).mock(
             return_value=Response(200, text=MOCK_MD)
         )
         
-        # 2. Tu API responde que ya tiene la versión de 2024-01-01
+        # La API responde que ya tiene la versión de 2024-01-01
         respx.get(url=re.compile(r".*/v1/leyes/BOE-A-2015-11430")).mock(
             return_value=Response(200, json={"last_updated": "2024-01-01"})
         )
         
-        # 3. Preparamos el mock de ingesta (pero no debería llamarse)
+        # Se prepara el mock de ingesta (pero no debería llamarse)
         ingesta_route = respx.post(re.compile(r".*/v1/leyes/ingestar")).mock(
             return_value=Response(201)
         )
 
         main()
 
-        # Verificamos que NO se llamó a la ingesta
+        # Se verifica que NO se llamó a la ingesta
         assert not ingesta_route.called
 
 @respx.mock
 def test_build_snapshot_error_capturado():
     # Prueba el siguiente caso: Cubre el bloque 'except Exception': algo falla durante el proceso.
     with patch("builtins.open", mock_open(read_data=MOCK_IDENTIFIERS)):
-        # Forzamos un error 500 en GitHub para que salte la excepción
+        # Se fuerza un error 500 en GitHub para que salte la excepción
         respx.get(url=re.compile(r"raw\.githubusercontent\.com/.*")).mock(
             return_value=Response(500)
         )
