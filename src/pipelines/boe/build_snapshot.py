@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-LEYES_RELEVANTES_PATH = Path(__file__).parent.parent.parent / "data" / "leyes_relevantes.json"
-LEGALIZE_ES_RAW_URL   = "https://raw.githubusercontent.com/legalize-dev/legalize-es/main/es/{identifier}.md"
+LEYES_RELEVANTES_PATH = Path(__file__).parent.parent.parent.parent / "data" / "leyes_relevantes.json"
+LEGALIZE_ES_RAW_URL   = "https://github.com/legalize-dev/legalize-es/blob/main/es/{identifier}.md"
 API_BASE_URL = os.getenv("API_URL", "http://localhost:8000")
 API_INGESTAR_URL = f"{API_BASE_URL}/v1/leyes/ingestar"
 API_LEY_URL      = f"{API_BASE_URL}/v1/leyes/{{identifier}}"
