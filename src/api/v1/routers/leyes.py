@@ -25,10 +25,10 @@ def get_repository() -> LeyRepositoryBase:
     "/ingestar",
     response_model=IngestarLeyResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Ingestar una ley en ChromaDB",
+    summary="Ingestar una ley en base de datos",
     description=(
         "Recibe el contenido crudo de un fichero .md de legalize-es, "
-        "extrae el frontmatter y el cuerpo, y lo guarda en ChromaDB. "
+        "extrae el frontmatter y el cuerpo, y lo guarda en BD. "
         "Si la ley ya existe, la sobreescribe (idempotente)."
     ),
 )
@@ -54,7 +54,7 @@ async def ingestar_ley(
     "",
     response_model=list[LeyMetadata],
     summary="Listar todas las leyes indexadas",
-    description="Devuelve los metadatos de todas las leyes almacenadas en ChromaDB.",
+    description="Devuelve los metadatos de todas las leyes almacenadas en BD.",
 )
 async def listar_leyes(repo: LeyRepositoryBase = Depends(get_repository)) -> list[LeyMetadata]:
     return await repo.list_all()

@@ -40,11 +40,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # ENDPOINTS DE LA API
-@app.get("/")
+@app.get("/",
+    tags=["Sistema"],        
+    summary="Inicio de la API",
+    description="Retorna un mensaje de bienvenida para verificar que la API está online"
+    )
 def read_root():
     return {"status": "JuezIA API Running"}
 
-@app.post("/analizar")
+@app.post("/analizar",
+    tags=["Análisis"],        
+    summary="Analizar caso de falso autónomo",
+    description=(
+        "Recibe un cuestionario sobre las condiciones laborales de un trabajador, "
+        "calcula la probabilidad de que sea considerado laboral por un juez, "
+        "y genera una recomendación personalizada."
+    )
+    ) 
 async def analizar_caso(cuestionario: CuestionarioFalsoAutonomo):
     # 1. Se transforma el modelo a diccionario
     datos = cuestionario.model_dump()

@@ -44,7 +44,7 @@ def test_ingestar_ley_success():
     # El test valida que el router extraiga correctamente los metadatos 
     # del frontmatter YAML incluido en el cuerpo.
 
-    # Simulamos el contenido de un archivo .md
+    # Se simula el contenido de un archivo .md
     payload = {"contenido_md": LEY_MD}
     mock_repo.upsert = AsyncMock()
     
@@ -67,8 +67,6 @@ def test_ingestar_ley_error():
 async def test_obtener_ley_success():
     # El test verifica que el router sabe manejar la tupla (metadata, contenido) 
     # que devuelve el repositorio
-    
-    # IMPORTANTE: El repo devuelve una tupla (Metadata, String)
     mock_repo.get = AsyncMock(return_value=(LEY_METADATA, "# Cuerpo de la ley"))
     
     response = client.get(f"/v1/leyes/{METADATA['identifier']}")
@@ -76,13 +74,13 @@ async def test_obtener_ley_success():
     assert response.status_code == 200
     data = response.json()
     
-    # Verificamos que la normalización funcionó
+    # Se verifica que la normalización funcionó
     assert data["identifier"] == "BOE-A-2015-11430"
     assert data["status"] == "vigente"     # Resultado del normalizar_status
 
 @pytest.mark.asyncio
 async def test_listar_leyes_vacia():
-    # Prueba el comportamiento cuando no hay leyes indexadas.
+    # Se prueba el comportamiento cuando no hay leyes indexadas.
     mock_repo.list_all = AsyncMock(return_value=[])
 
     response = client.get("/v1/leyes")
@@ -92,7 +90,7 @@ async def test_listar_leyes_vacia():
 
 @pytest.mark.asyncio
 async def test_obtener_ley_not_found():
-    # Prueba el error 404 cuando la ley no existe.
+    # Se prueba el error 404 cuando la ley no existe.
     mock_repo.get = AsyncMock(return_value=None)
     
     response = client.get("/v1/leyes/ID-INEXISTENTE")
@@ -104,7 +102,7 @@ async def test_obtener_ley_not_found():
 @pytest.mark.asyncio
 async def test_ingestar_ley_value_error_cobertura():
     # Prueba destinada a cubrir las líneas de excepción en leyes.py
-    # Enviamos algo que sabemos que romperá el parser
+    # Se envia algo que sabemos que romperá el parser
     payload = {"contenido_md": "formato_totalmente_invalido_sin_yaml"}
     
     response = client.post("/v1/leyes/ingestar", json=payload)
