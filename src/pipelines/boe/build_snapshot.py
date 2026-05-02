@@ -5,7 +5,10 @@ import logging
 from pathlib import Path
 from typing import Optional
 from datetime import date
+import sys
 
+print(f"DEBUG: PYTHONPATH es {sys.path[0]}")
+print(f"DEBUG: Directorio actual es {os.getcwd()}")
 
 import httpx
 
@@ -14,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-LEYES_RELEVANTES_PATH = Path(__file__).parent.parent.parent.parent / "data" / "leyes_relevantes.json"
+# Calculamos la raíz del proyecto (juezIA) para asegurar que podemos importar los módulos de src sin problemas.
+root_path = Path(__file__).resolve().parent.parent.parent.parent
+if str(root_path) not in sys.path:
+    sys.path.append(str(root_path))
+
+LEYES_RELEVANTES_PATH = root_path / "data" / "leyes_relevantes.json"
 LEGALIZE_ES_RAW_URL   = "https://github.com/legalize-dev/legalize-es/blob/main/es/{identifier}.md"
 API_BASE_URL = os.getenv("API_URL", "http://localhost:8000")
 API_INGESTAR_URL = f"{API_BASE_URL}/v1/leyes/ingestar"
