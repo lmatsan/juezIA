@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
+from typing import Optional
 
 import httpx
 
@@ -68,7 +69,6 @@ def _descargar_ley(client: httpx.Client, identifier: str) -> str:
 
 
 def _extraer_last_updated(contenido_md: str) -> Optional[date]:
-    """Reutiliza el parser para no duplicar lógica de frontmatter."""
     from src.utils.boe.parser_ley import parsear_ley
     metadata, _ = parsear_ley(contenido_md)
     return metadata.last_updated

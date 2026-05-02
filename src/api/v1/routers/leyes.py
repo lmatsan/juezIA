@@ -1,6 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
+from typing import Optional
 
+from src.utils.boe.base import LeyRepositoryBase
+from src.utils.boe.json_repo import JsonLeyRepository
+from src.schemas.ley import LeyMetadata
+from src.utils.boe.parser_ley import parsear_ley
 from src.schemas.ley import LeyMetadata
 from src.utils.boe.parser_ley import parsear_ley
 
@@ -13,6 +18,9 @@ class IngestarLeyResponse(BaseModel):
     identifier: str
     message: str
 
+def get_repository() -> LeyRepositoryBase:
+    return JsonLeyRepository()
+
 @router.post(
     "/ingestar",
     response_model=IngestarLeyResponse,
@@ -24,14 +32,15 @@ class IngestarLeyResponse(BaseModel):
         "Si la ley ya existe, la sobreescribe (idempotente)."
     ),
 )
-async def ingestar_ley(request: IngestarLeyRequest) -> IngestarLeyResponse:
+async def ingestar_ley(
+    request: IngestarLeyRequest,
+    repo: LeyRepositoryBase = Depends(get_repository),
+    ) -> IngestarLeyResponse:
+    
     try:
         metadata, contenido = parsear_ley(request.contenido_md)
     except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        ) from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     await _guardar_en_chromadb(metadata, contenido)
 
@@ -47,8 +56,8 @@ async def ingestar_ley(request: IngestarLeyRequest) -> IngestarLeyResponse:
     summary="Listar todas las leyes indexadas",
     description="Devuelve los metadatos de todas las leyes almacenadas en ChromaDB.",
 )
-async def listar_leyes() -> list[LeyMetadata]:
-    return await _listar_desde_chromadb()
+async def listar_leyes(repo: LeyRepositoryBase = Depends(get_repository)) -> list[LeyMetadata]:
+    return await repo.list_all()
 
 
 @router.get(
@@ -57,14 +66,12 @@ async def listar_leyes() -> list[LeyMetadata]:
     summary="Obtener una ley por identificador",
     description="Devuelve los metadatos de una ley concreta. Ejemplo: BOE-A-2015-11430",
 )
-async def obtener_ley(identifier: str) -> LeyMetadata:
-    ley = await _obtener_desde_chromadb(identifier)
+async def obtener_ley(identifier: str, repo: LeyRepositoryBase = Depends(get_repository)) -> LeyMetadata:
+    ley = await repo.get(identifier)
     if ley is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No se encontró ninguna ley con identifier '{identifier}'.",
-        )
-    return ley
+        raise HTTPException(status_code=404, detail=f"Ley '{identifier}' no encontrada.")
+    metadata, _ = ley
+    return metadata
 
 
 # Funciones auxiliares para interactuar con ChromaDB (implementación pendiente)

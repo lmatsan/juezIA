@@ -52,3 +52,24 @@ def main() -> None:
     )
     if resultados["error"]:
         logger.warning(f"Leyes con error: {resultados['error']}")
+
+def _cargar_identifiers() -> list[str]:
+    with open(LEYES_RELEVANTES_PATH, encoding="utf-8") as f:
+        datos = json.load(f)
+    return datos["leyes"]
+
+
+def _descargar_ley(client: httpx.Client, identifier: str) -> str:
+    url = LEGALIZE_ES_RAW_URL.format(identifier=identifier)
+    response = client.get(url)
+    response.raise_for_status()
+    return response.text
+
+
+def _ingestar_ley(client: httpx.Client, identifier: str, contenido_md: str) -> None:
+    response = client.post(API_INGESTAR_URL, json={"contenido_md": contenido_md})
+    response.raise_for_status()
+
+
+if __name__ == "__main__":
+    main()
