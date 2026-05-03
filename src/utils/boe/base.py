@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
+import sys
+
 from src.schemas.ley import LeyMetadata
-
-
 class LeyRepositoryBase(ABC):
 
     @abstractmethod

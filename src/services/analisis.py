@@ -1,4 +1,3 @@
-import random
 
 class AnalizadorService:
     @staticmethod

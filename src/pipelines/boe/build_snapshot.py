@@ -66,12 +66,6 @@ def _cargar_identifiers() -> list[str]:
 
 
 def _descargar_ley(client: httpx.Client, identifier: str) -> str:
-    # Extraemos el año del identificador (ej: de 'BOE-A-2015-11430' sacamos '2015')
-    # try:
-    #     year = identifier.split("-")[2]
-    # except IndexError:
-    #     logger.error(f"Formato de identificador inválido: {identifier}")
-    #     raise
     url = LEGALIZE_ES_RAW_URL.format(identifier=identifier)
 
     response = client.get(url)
