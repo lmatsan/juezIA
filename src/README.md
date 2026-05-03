@@ -146,6 +146,10 @@ El workflow `snapshot_leyes.yml` se dispara en tres situaciones:
 - **El día 1 de cada mes** de forma programada, para incorporar las reformas que legalize-es haya consolidado durante el mes anterior.
 - **Manualmente** desde la pestaña Actions de GitHub, usando el botón _Run workflow_, cuando se necesita forzar una regeneración sin modificar ningún fichero.
 
+### Cómo generar manualmente un snapshot (sin guardar en Github Release)
+
+Con la API lanzada, ejecutar desde la raiz del proycto: `python pipelines/boe/build_snapshot.py`
+
 ### Qué hace el workflow
 
 push a develop (o trigger manual/programado)
