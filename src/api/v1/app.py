@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import logging
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # IMPORTACIONES DE NUESTROS NUEVOS ARCHIVOS
 from src.schemas.caso import CuestionarioFalsoAutonomo
@@ -9,6 +10,7 @@ from src.services.analisis import AnalizadorService
 
 # INICIALIZACIÓN
 app = FastAPI(title="JuezIA API - PMMV", description="JuezIA API - PMMV", version="1.0.0")
+Instrumentator().instrument(app).expose(app)
 
 # CONFIGURACIÓN DE LOGS
 logging.basicConfig(
