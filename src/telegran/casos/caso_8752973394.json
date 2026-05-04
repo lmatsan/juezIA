@@ -1,0 +1,22 @@
+{
+    "dependencia": {
+        "centro_trabajo_impuesto": "si",
+        "horario_franjas": "si",
+        "geolocalizacion_constante": "si",
+        "instrucciones_detalladas": "si",
+        "permiso_ausencias": "si",
+        "metricas_puntuacion": "si",
+        "materiales_empresa": "los materiales de trabajo son proporcionados por la empresa",
+        "otras_apps": "si"
+    },
+    "ajenidad": {
+        "materiales_trabajo": "me dan todo",
+        "propiedad_materiales": "son de la empresa",
+        "precio_servicio": "la empresa",
+        "riesgo_empresarial": "trabajo por horas",
+        "marca_imagen": "si"
+    },
+    "dependencia_y_ajenidad": {
+        "facturacion": "me envian un documento para que lo acepte"
+    }
+}
