@@ -2,6 +2,7 @@ import requests
 import time
 import json
 from pathlib import Path
+from datetime import datetime
 
 TOKEN = "8726779674:AAGzRxWTQ21fE_iHNwSy5t_rbqQBdkOdiL0"
 
@@ -11,72 +12,20 @@ PREGUNTAS = [
     {
         "categoria": "Dependencia",
         "campo": "centro_trabajo_impuesto",
-        "pregunta": "¿Asistes todos los días a un centro de trabajo impuesto por la empresa?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "horario_franjas",
-        "pregunta": "¿La empresa fija el horario y las franjas de servicio? ¿Tú eliges libremente cuándo conectarte o tienes que reservar turnos/franjas con antelación en la App?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "geolocalizacion_constante",
-        "pregunta": "¿Existe geolocalización constante?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "instrucciones_detalladas",
-        "pregunta": "¿Hay instrucciones detalladas sobre el comportamiento? ¿La empresa te ha dado alguna guía o manual sobre cómo debes saludar al cliente o cómo colocar el casco y la mochila?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "permiso_ausencias",
-        "pregunta": "¿Se requiere permiso para ausencias?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "metricas_puntuacion",
-        "pregunta": "¿Existe un sistema de métricas/puntuación? ¿Sientes que si rechazas pedidos o no te conectas los fines de semana, la App te castiga dándote menos trabajo después?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "materiales_empresa",
-        "pregunta": "¿Los materiales de trabajo son propios o son proporcionados por la empresa?"
-    },
-    {
-        "categoria": "Dependencia",
-        "campo": "otras_apps",
-        "pregunta": "¿Trabajas o podrías trabajar en otras aplicaciones similares mientras estás dado de alta en esta?"
-    },
-    {
-        "categoria": "Ajenidad",
-        "campo": "materiales_trabajo",
-        "pregunta": "¿Cuáles son los materiales de trabajo? Por ejemplo: método de transporte, aplicaciones, uniforme, mochila, móvil, etc."
-    },
-    {
-        "categoria": "Ajenidad",
-        "campo": "propiedad_materiales",
-        "pregunta": "¿Los materiales antes citados son tuyos o de la empresa?"
-    },
-    {
-        "categoria": "Ajenidad",
-        "campo": "precio_servicio",
-        "pregunta": "¿Quién fija el precio del servicio?"
-    },
-    {
-        "categoria": "Ajenidad",
-        "campo": "riesgo_empresarial",
-        "pregunta": "¿El trabajador asume riesgo empresarial? Si un día no hay apenas pedidos, ¿tienes garantizado un pago mínimo por hora o solo cobras si entregas algo?"
+        "pregunta": "¿Asistes todos los días a un centro de trabajo impuesto por la empresa?",
+        "tipo": "boolean"
     },
     {
         "categoria": "Ajenidad",
         "campo": "marca_imagen",
-        "pregunta": "¿La marca y la imagen pertenecen a la empresa?"
+        "pregunta": "¿La marca y la imagen pertenecen a la empresa?",
+        "tipo": "boolean"
     },
     {
         "categoria": "Dependencia y ajenidad",
         "campo": "facturacion",
-        "pregunta": "A la hora de cobrar, ¿tú haces tu propia factura y se la envías a la empresa, o ellos te envían ya un documento hecho para que lo aceptes?"
+        "pregunta": "Sonrie si alguna vez te han hecho TRAS TRAS por detras",
+        "tipo": "texto"
     }
 ]
 
@@ -94,21 +43,67 @@ def enviar_mensaje(chat_id, texto):
     )
 
 
-def guardar_resultado(chat_id, respuestas):
+def texto_a_booleano(texto):
+    texto = texto.strip().lower()
+
+    if texto in ["si", "sí", "s", "yes", "y"]:
+        return True
+
+    if texto in ["no", "n"]:
+        return False
+
+    return None
+
+
+def guardar_resultado(chat_id, sesion):
     carpeta = Path("casos")
     carpeta.mkdir(exist_ok=True)
 
-    archivo = carpeta / f"caso_{chat_id}.json"
+    fecha = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    archivo = carpeta / f"caso_{chat_id}_{fecha}.json"
+
+    salida = {
+        "fecha_creacion": fecha,
+        "telegram_user": sesion["telegram_user"],
+        "respuestas": sesion["respuestas"]
+    }
 
     with open(archivo, "w", encoding="utf-8") as f:
-        json.dump(respuestas, f, ensure_ascii=False, indent=4)
+        json.dump(salida, f, ensure_ascii=False, indent=4)
+
+    print(f"Archivo creado en: {archivo.resolve()}")
 
     return archivo
 
 
-def iniciar_sesion(chat_id):
+def obtener_bloque(categoria):
+    if categoria == "Dependencia":
+        return "dependencia"
+
+    if categoria == "Ajenidad":
+        return "ajenidad"
+
+    return "dependencia_y_ajenidad"
+
+
+def enviar_pregunta(chat_id, pregunta):
+    extra = (
+        "\n\nResponde: sí o no"
+        if pregunta.get("tipo", "texto") == "boolean"
+        else "\n\nResponde con texto libre"
+    )
+
+    enviar_mensaje(
+        chat_id,
+        f"{pregunta['categoria']}\n\n{pregunta['pregunta']}{extra}"
+    )
+
+
+def iniciar_sesion(chat_id, usuario_telegram):
     sesiones[chat_id] = {
         "indice": 0,
+        "telegram_user": usuario_telegram,
         "respuestas": {
             "dependencia": {},
             "ajenidad": {},
@@ -116,38 +111,51 @@ def iniciar_sesion(chat_id):
         }
     }
 
-    primera = PREGUNTAS[0]
-    enviar_mensaje(
-        chat_id,
-        f"{primera['categoria']}\n\n{primera['pregunta']}"
-    )
+    enviar_pregunta(chat_id, PREGUNTAS[0])
 
 
 def procesar_respuesta(chat_id, texto):
     sesion = sesiones[chat_id]
+
     indice = sesion["indice"]
 
     pregunta_actual = PREGUNTAS[indice]
+
     categoria = pregunta_actual["categoria"]
     campo = pregunta_actual["campo"]
+    tipo = pregunta_actual.get("tipo", "texto")
 
-    if categoria == "Dependencia":
-        bloque = "dependencia"
-    elif categoria == "Ajenidad":
-        bloque = "ajenidad"
+    bloque = obtener_bloque(categoria)
+
+    if tipo == "boolean":
+        valor = texto_a_booleano(texto)
+
+        if valor is None:
+            enviar_mensaje(
+                chat_id,
+                "Respuesta no válida. Por favor responde solo: sí o no"
+            )
+            return
+
+        sesion["respuestas"][bloque][campo] = {
+    "pregunta": pregunta_actual["pregunta"],
+    "respuesta": valor
+}
+
     else:
-        bloque = "dependencia_y_ajenidad"
-
-    sesion["respuestas"][bloque][campo] = texto
+        sesion["respuestas"][bloque][campo] = {
+    "pregunta": pregunta_actual["pregunta"],
+    "respuesta": texto
+}
 
     sesion["indice"] += 1
 
     if sesion["indice"] >= len(PREGUNTAS):
-        archivo = guardar_resultado(chat_id, sesion["respuestas"])
+        archivo = guardar_resultado(chat_id, sesion)
 
         enviar_mensaje(
             chat_id,
-            f"Cuestionario terminado.\n\nHe guardado el caso en:\n{archivo}"
+            f"Cuestionario terminado.\n\nHe guardado el caso en:\n{archivo.name}"
         )
 
         del sesiones[chat_id]
@@ -155,13 +163,11 @@ def procesar_respuesta(chat_id, texto):
 
     siguiente = PREGUNTAS[sesion["indice"]]
 
-    enviar_mensaje(
-        chat_id,
-        f"{siguiente['categoria']}\n\n{siguiente['pregunta']}"
-    )
+    enviar_pregunta(chat_id, siguiente)
 
 
 print("Bot de JuezIA iniciado...")
+
 
 while True:
     params = {}
@@ -169,38 +175,67 @@ while True:
     if ultimo_update_id is not None:
         params["offset"] = ultimo_update_id + 1
 
-    response = requests.get(
-        f"{BASE_URL}/getUpdates",
-        params=params
-    )
+    params["timeout"] = 30
 
-    data = response.json()
-    print(data)
+    try:
+        response = requests.get(
+            f"{BASE_URL}/getUpdates",
+            params=params,
+            timeout=35
+        )
 
-    for update in data.get("result", []):
-        ultimo_update_id = update["update_id"]
+        data = response.json()
 
-        message = update.get("message", {})
-        chat_id = message.get("chat", {}).get("id")
-        texto = message.get("text", "")
+        print(data)
 
-        if not chat_id or not texto:
-            continue
+        for update in data.get("result", []):
+            ultimo_update_id = update["update_id"]
 
-        if texto.lower() in ["/start", "start", "iniciar"]:
-            enviar_mensaje(
-                chat_id,
-                "Hola. Soy JuezIA.\n\nVoy a hacerte unas preguntas para analizar indicios de dependencia y ajenidad.\n\nResponde con texto libre."
-            )
-            iniciar_sesion(chat_id)
+            message = update.get("message", {})
 
-        elif chat_id in sesiones:
-            procesar_respuesta(chat_id, texto)
+            chat = message.get("chat", {})
+            from_user = message.get("from", {})
 
-        else:
-            enviar_mensaje(
-                chat_id,
-                "Para empezar el cuestionario escribe /start"
-            )
+            chat_id = chat.get("id")
+            texto = message.get("text", "")
 
-    time.sleep(2)
+            usuario_telegram = {
+                "id": from_user.get("id"),
+                "is_bot": from_user.get("is_bot"),
+                "first_name": from_user.get("first_name"),
+                "last_name": from_user.get("last_name"),
+                "username": from_user.get("username"),
+                "language_code": from_user.get("language_code"),
+                "chat_id": chat.get("id"),
+                "chat_type": chat.get("type")
+            }
+
+            if not chat_id or not texto:
+                continue
+
+            print(f"Mensaje recibido: {texto}")
+
+            if texto.lower() in ["/start", "start", "iniciar"]:
+                enviar_mensaje(
+                    chat_id,
+                    "Hola. Soy JuezIA.\n\nVoy a hacerte unas preguntas para analizar indicios de dependencia y ajenidad."
+                )
+
+                iniciar_sesion(chat_id, usuario_telegram)
+
+            elif chat_id in sesiones:
+                procesar_respuesta(chat_id, texto)
+
+            else:
+                enviar_mensaje(
+                    chat_id,
+                    "Para empezar el cuestionario escribe /start"
+                )
+
+    except requests.exceptions.RequestException as error:
+        print(f"Error de conexión con Telegram: {error}")
+
+    except Exception as error:
+        print(f"Error inesperado: {error}")
+
+    time.sleep(1)
