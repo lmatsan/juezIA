@@ -239,3 +239,4 @@ while True:
         print(f"Error inesperado: {error}")
 
     time.sleep(1)
+    
