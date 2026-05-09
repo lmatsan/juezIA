@@ -36,12 +36,16 @@ if not REPO:
 def main() -> None:
     logger.info("Buscando último snapshot en GitHub Releases...")
 
-    with httpx.Client(timeout=30) as client:
-        url_descarga = _obtener_url_descarga(client)
-        logger.info(f"Snapshot encontrado: {url_descarga}")
-        _descargar_snapshot(client, url_descarga)
-
-    logger.info(f"Snapshot importado correctamente en {LEYES_DB_PATH}")
+    try:
+        with httpx.Client(timeout=30) as client:
+            url_descarga = _obtener_url_descarga(client)
+            logger.info(f"Snapshot encontrado: {url_descarga}")
+            _descargar_snapshot(client, url_descarga)
+        logger.info(f"Snapshot importado correctamente en {LEYES_DB_PATH}")
+    except ValueError as exc:
+        logger.error(exc)
+    except httpx.HTTPError as exc:
+        logger.error(f"Error de red al contactar con GitHub: {exc}")
 
 # Funciones auxiliares
 def _obtener_url_descarga(client: httpx.Client) -> str:
