@@ -20,25 +20,25 @@ logger = logging.getLogger(__name__)
 # Configuración 
 GITHUB_API_LATEST = "https://api.github.com/repos/{owner}/{repo}/releases/latest"
 LEYES_DB_PATH     = Path(__file__).parent.parent.parent / "data" / "leyes_db.json"
-OWNER             = os.getenv("GITHUB_OWNER")
-REPO              = os.getenv("GITHUB_REPO")
-
-if not OWNER:
-    raise EnvironmentError(
-        "Variable entorno GITHUB_OWNER no definida.\n"      
-    )
-if not REPO:
-    raise EnvironmentError(
-        "Variable entorno GITHUB_REPO no definida.\n"
-    )
 
 # Entry point
 def main() -> None:
+    OWNER             = os.getenv("GITHUB_OWNER")
+    REPO              = os.getenv("GITHUB_REPO")
+    if not OWNER:
+        raise EnvironmentError(
+            "Variable entorno GITHUB_OWNER no definida.\n"      
+        )
+    if not REPO:
+        raise EnvironmentError(
+            "Variable entorno GITHUB_REPO no definida.\n"
+        )
+
     logger.info("Buscando último snapshot en GitHub Releases...")
 
     try:
         with httpx.Client(timeout=30) as client:
-            url_descarga = _obtener_url_descarga(client)
+            url_descarga = _obtener_url_descarga(client, OWNER, REPO)
             logger.info(f"Snapshot encontrado: {url_descarga}")
             _descargar_snapshot(client, url_descarga)
         logger.info(f"Snapshot importado correctamente en {LEYES_DB_PATH}")
@@ -48,13 +48,13 @@ def main() -> None:
         logger.error(f"Error de red al contactar con GitHub: {exc}")
 
 # Funciones auxiliares
-def _obtener_url_descarga(client: httpx.Client) -> str:
-    url = GITHUB_API_LATEST.format(owner=OWNER, repo=REPO)
+def _obtener_url_descarga(client: httpx.Client, owner: str, repo: str) -> str:
+    url = GITHUB_API_LATEST.format(owner=owner, repo=repo)
     response = client.get(url, headers={"Accept": "application/vnd.github+json"})
 
     if response.status_code == 404:
         raise ValueError(
-            f"No se encontró ningún release en '{OWNER}/{REPO}'. "
+            f"No se encontró ningún release en '{owner}/{repo}'. "
             "Asegúrate de que el workflow ha generado al menos un release "
             "o crea uno manualmente desde GitHub."
         )
