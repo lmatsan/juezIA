@@ -167,14 +167,9 @@ push a develop (o trigger manual/programado)
 
 ### Cómo usar un snapshot en local
 
-OPCIÓN 1. Descarga el último release desde la pestaña **Releases** del repositorio y coloca el fichero en `data/leyes_db.json`. La API lo usará automáticamente al arrancar.
+**OPCIÓN 1**. Descarga el último release desde la pestaña **Releases** del repositorio y coloca el fichero en `data/leyes_db.json`. La API lo usará automáticamente al arrancar.
 
-OPCIÓN 2. Usa el script de importación. Necesitas definir las siguientes variables de entorno en un fichero `.env` en la raíz del proyecto: GITHUB_OWNER y GITHUB_REPO
-Y ejecuta:
-
-```bash
-python src/pipelines/boe/import_snapshot.py
-```
+**OPCIÓN 2**. Usa el script de importación. Necesitas definir las siguientes variables de entorno en un fichero `.env` en la raíz del proyecto: GITHUB_OWNER y GITHUB_REPO
 
 > **Nota:** Esta arquitectura es provisional. Cuando se integre ChromaDB,
 > el snapshot pasará a ser un volumen exportado de la base de datos vectorial.
@@ -186,9 +181,16 @@ python src/pipelines/boe/import_snapshot.py
 Este proyecto utiliza **GitHub Actions** para validar cada cambio automáticamente.
 
 - **Unit Tests:** Se ejecutan con `pytest`.
-
-```bash
-pytest --cov=src --cov-report=term-missing
-```
-
 - **Coverage:** Se requiere un mínimo del 80% de cobertura de código para permitir el despliegue.
+
+## Cheat Sheet
+
+Esta es la guía rápida de comandos esenciales para trabajar con el proyecto:
+AcciónComandoArrancar API Testear pytest Importar Snapshot
+
+| Acción                  | Comando                                       |
+| :---------------------- | :-------------------------------------------- |
+| Arrancar API            | python -m uvicorn src.api.v1.app:app --reload |
+| Testear                 | pytest --cov=src --cov-report=term-missing    |
+| Importar Snapshot Leyes | python src/pipelines/boe/import_snapshot.py   |
+| Generar Snapshot Leyes  | python pipelines/boe/build_snapshot.py        |
