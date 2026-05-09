@@ -47,6 +47,14 @@ def main() -> None:
 def _obtener_url_descarga(client: httpx.Client) -> str:
     url = GITHUB_API_LATEST.format(owner=OWNER, repo=REPO)
     response = client.get(url, headers={"Accept": "application/vnd.github+json"})
+
+    if response.status_code == 404:
+        raise ValueError(
+            f"No se encontró ningún release en '{OWNER}/{REPO}'. "
+            "Asegúrate de que el workflow ha generado al menos un release "
+            "o crea uno manualmente desde GitHub."
+        )
+
     response.raise_for_status()
 
     assets = response.json().get("assets", [])
