@@ -3,13 +3,16 @@
 El código sigue una arquitectura modular y profesional, separando la lógica de negocio de la infraestructura y asegurando la calidad mediante una suite de pruebas externa al código fuente:
 
 - **`.venv/`**: Entorno virtual de Python donde se gestionan las dependencias de forma aislada.
+- **`data/`**: Datos generados. `leyes_relevantes.json` define qué leyes indexar. `leyes_db.json` es el snapshot generado (no versionado, se distribuye via GitHub Releases).
 - **`src/`**: Carpeta principal que contiene el código fuente de la aplicación.
   - **`api/v1/`**: Versión 1 de la API. Contiene `app.py`, que registra los routers y configura FastAPI.
   - **`core/`**: Configuración transversal, gestión de variables de entorno (`config.py`) y excepciones personalizadas.
   - **`schemas/`**: Modelos de Pydantic para la validación de datos.
   - **`services/`**: Capa de orquestación. `analisis.py` procesa la lógica entre la API y los módulos específicos.
   - **`modules/`**: El cerebro del asistente. Contiene la lógica jurídica organizada por jurisdicciones (ej. `laboral/autonomos`).
+  - **`pipelines/`**: Pipelines de datos. `boe/build_snapshot.py` descarga y indexa las leyes del BOE. `boe/import_snapshot.py` descarga las leyes disponibles en Release de Github.
   - **`utils/`**: Funciones de soporte reutilizables, como parseadores de archivos o herramientas de texto.
+    - **`utils/boe/`**: Parseador de ficheros `.md` de legalize-es y capa de acceso a datos (Repository Pattern).
 - **`tests/`**: Ubicada en la raíz para separar el código de producción del de pruebas.
   - **`unit/`**: Pruebas unitarias de funciones y reglas aisladas.
   - **`conftest.py`**: Configuración global de Pytest y definición de fixtures.
@@ -164,9 +167,14 @@ push a develop (o trigger manual/programado)
 
 ### Cómo usar un snapshot en local
 
-Descarga el último release desde la pestaña **Releases** del repositorio
-y coloca el fichero en `data/leyes_db.json`. La API lo usará automáticamente
-al arrancar.
+OPCIÓN 1. Descarga el último release desde la pestaña **Releases** del repositorio y coloca el fichero en `data/leyes_db.json`. La API lo usará automáticamente al arrancar.
+
+OPCIÓN 2. Usa el script de importación. Necesitas definir las siguientes variables de entorno en un fichero `.env` en la raíz del proyecto: GITHUB_OWNER y GITHUB_REPO
+Y ejecuta:
+
+```bash
+python src/pipelines/boe/import_snapshot.py
+```
 
 > **Nota:** Esta arquitectura es provisional. Cuando se integre ChromaDB,
 > el snapshot pasará a ser un volumen exportado de la base de datos vectorial.
@@ -178,4 +186,9 @@ al arrancar.
 Este proyecto utiliza **GitHub Actions** para validar cada cambio automáticamente.
 
 - **Unit Tests:** Se ejecutan con `pytest`.
+
+```bash
+pytest --cov=src --cov-report=term-missing
+```
+
 - **Coverage:** Se requiere un mínimo del 80% de cobertura de código para permitir el despliegue.
