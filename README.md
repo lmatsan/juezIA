@@ -19,9 +19,27 @@ El proyecto no busca reemplazar el juicio humano, sino analizar hasta qué punto
 definitivo. 
 
 
-## 🐳⚙️ Uso de dockercompose
-Para arrancar dockercompose es necesario: 
+## 🐳⚙️ Uso de Docker Compose
 
-🟡 Ejecutar el comando "docker compose up --build" : Construye (o reconstruye) la imagen desde el Dockerfile y luego arranca los contenedores definidos en docker-compose. 
+Para levantar el proyecto en local utilizando **Docker Compose**, es necesario seguir los siguientes pasos:
 
-🟡 Conectar desde un navegador a http://localhost:8080/docs  y validar que funciona correctamente
+### 1. Construir y arrancar los contenedores
+
+Ejecutar el siguiente comando desde la raíz del proyecto, donde se encuentra el archivo `docker-compose.yml`:
+
+```bash
+docker compose up --build
+
+
+### 2. Validar que la aplicación está funcionando
+
+Una vez que los contenedores estén levantados correctamente, abrir un navegador y acceder a: http://localhost:8080/docs
+Si todo funciona correctamente, debería mostrarse la documentación interactiva de la API.
+
+
+### 3. Detener los contenedores
+
+Para detener la ejecución de los contenedores, se puede usar: docker compose down
+
+
+
