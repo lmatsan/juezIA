@@ -18,6 +18,9 @@ El proyecto no busca reemplazar el juicio humano, sino analizar hasta qué punto
 🟡 Fase inicial --- definición de alcance, arquitectura y caso de uso
 definitivo. 
 
+
+
+
 ## 🐳⚙️ Uso de Docker Compose
 
 Para levantar el proyecto en local utilizando **Docker Compose**, es necesario seguir los siguientes pasos:
