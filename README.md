@@ -18,7 +18,6 @@ El proyecto no busca reemplazar el juicio humano, sino analizar hasta qué punto
 🟡 Fase inicial --- definición de alcance, arquitectura y caso de uso
 definitivo. 
 
-
 ## 🐳⚙️ Uso de Docker Compose
 
 Para levantar el proyecto en local utilizando **Docker Compose**, es necesario seguir los siguientes pasos:
@@ -29,17 +28,26 @@ Ejecutar el siguiente comando desde la raíz del proyecto, donde se encuentra el
 
 ```bash
 docker compose up --build
+```
 
+Este comando construye o reconstruye la imagen desde el `Dockerfile` y arranca los contenedores definidos en `docker-compose.yml`.
 
 ### 2. Validar que la aplicación está funcionando
 
-Una vez que los contenedores estén levantados correctamente, abrir un navegador y acceder a: http://localhost:8080/docs
-Si todo funciona correctamente, debería mostrarse la documentación interactiva de la API.
+Una vez que los contenedores estén levantados correctamente, abrir un navegador y acceder a:
 
+```text
+http://localhost:8080/docs
+```
+
+Si todo funciona correctamente, debería mostrarse la documentación interactiva de la API.
 
 ### 3. Detener los contenedores
 
-Para detener la ejecución de los contenedores, se puede usar: docker compose down
+Para detener la ejecución de los contenedores, se puede usar:
 
+```bash
+docker compose down
+```
 
-
+Este comando detiene y elimina los contenedores creados por Docker Compose.
