@@ -1,0 +1,56 @@
+name: Sync BOE Data
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "data/leyes_relevantes.json"
+
+  workflow_dispatch:
+
+  schedule:
+  - cron: '0 0 1 * *' #"A las 00:00, el día 1 de cada mes"   
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Arrancar FastAPI en background
+        run: |
+          uvicorn src.main:app --host 0.0.0.0 --port 8000 &
+          sleep 3
+
+      - name: Ejecutar build_snapshot.py
+        run: python pipelines/boe/build_snapshot.py
+
+      - name: Generar tag con fecha
+        id: tag
+        run: echo "TAG=v$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+
+      - name: Publicar en GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "Snapshot BOE ${{ steps.tag.outputs.TAG }}"
+          body: |
+            Snapshot automático generado desde `data/leyes_relevantes.json`.
+            Commit: ${{ github.sha }}
+          files: data/leyes_db.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

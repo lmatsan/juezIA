@@ -12,3 +12,6 @@ __pycache__/
 ### IDEs y logs ###
 .vscode/
 *.log
+
+### BD de leyes en json — usar GitHub Releases
+data/leyes_db.json

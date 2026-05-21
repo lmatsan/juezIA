@@ -6,9 +6,13 @@ import logging
 # IMPORTACIONES DE NUESTROS NUEVOS ARCHIVOS
 from src.schemas.caso import CuestionarioFalsoAutonomo
 from src.services.analisis import AnalizadorService
+from src.api.v1.routers.leyes import router as leyes_router
 
 # INICIALIZACIÓN
-app = FastAPI(title="JuezIA API - PMMV", description="JuezIA API - PMMV", version="1.0.0")
+app = FastAPI(title="JuezIA API", description="JuezIA API", version="1.0.0")
+
+# REGISTRAMOS EL ROUTER DE LEYES
+app.include_router(leyes_router)
 
 # CONFIGURACIÓN DE LOGS
 logging.basicConfig(
@@ -36,11 +40,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # ENDPOINTS DE LA API
-@app.get("/")
+@app.get("/",
+    tags=["Sistema"],        
+    summary="Inicio de la API",
+    description="Retorna un mensaje de bienvenida para verificar que la API está online"
+    )
 def read_root():
     return {"status": "JuezIA API Running"}
 
-@app.post("/analizar")
+@app.post("/analizar",
+    tags=["Análisis"],        
+    summary="Analizar caso de falso autónomo",
+    description=(
+        "Recibe un cuestionario sobre las condiciones laborales de un trabajador, "
+        "calcula la probabilidad de que sea considerado laboral por un juez, "
+        "y genera una recomendación personalizada."
+    )
+    ) 
 async def analizar_caso(cuestionario: CuestionarioFalsoAutonomo):
     # 1. Se transforma el modelo a diccionario
     datos = cuestionario.model_dump()
@@ -55,13 +71,3 @@ async def analizar_caso(cuestionario: CuestionarioFalsoAutonomo):
         "recomendacion": consejo,
         "mensaje": "Análisis realizado con motor experimental PMMV"
     }
-
-# TEST PARA CUBRIR EL MANEJADOR DE ERRORES
-def test_analizar_caso_validation_error(client):
-    """Fuerza el error 422 para cubrir las líneas 23-30 de app.py"""
-    # Enviamos algo que no sea un CuestionarioFalsoAutonomo válido
-    payload = {"dato_incorrecto": "error"} 
-    response = client.post("/analizar", json=payload)
-    
-    assert response.status_code == 422
-    assert response.json()["error"] == "Invalid data"
